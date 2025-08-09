@@ -1,12 +1,90 @@
-set context:
-```kcctl config set-context local --cluster http://localhost:8083```
+# Debezium-Iceberg Integration Project
 
-```kcctl info```
+This project demonstrates how to integrate Debezium with Apache Iceberg using Kafka Connect, providing a complete CDC (Change Data Capture) pipeline that captures changes from PostgreSQL and writes them to Iceberg tables stored in MinIO.
 
-```kcctl get plugins --types=sink```
+## Overview
 
-load example data to kafka and see topic
+The project showcases:
+- Streaming data from Kafka topics to Iceberg tables
+- CDC from PostgreSQL using Debezium connectors
+- Schema management with Avro and Schema Registry
+- Data transformation and type conversion
+- Dynamic table routing for multi-schema scenarios
+
+## Architecture
+
+- **Kafka**: Message broker for streaming data
+- **Debezium**: CDC connector for PostgreSQL
+- **Iceberg**: Table format for data lake storage
+- **MinIO**: S3-compatible object storage
+- **Hive Metastore**: Metadata management for Iceberg
+- **Trino**: Query engine for analytics
+- **Schema Registry**: Schema management for Avro
+
+## Getting Started
+
+### Prerequisites
+
+- Docker and Docker Compose
+- kcctl (Kafka Connect CLI tool)
+
+### Quick Start
+
+Use the provided Makefile for easy project management:
+
+```bash
+# Download Iceberg connector and setup project
+make setup
+
+# Start all services
+make up
+
+# Set kcctl context
+make context
+
+# View service status
+make ps
+
+# View logs
+make logs
+
+# Stop all services
+make down
+
+# Clean all data (removes volumes and downloaded connectors)
+make clean
 ```
+
+### Available Makefile Commands
+
+| Command | Description |
+|---------|-------------|
+| `make setup` | Download Iceberg connector and prepare project |
+| `make up` | Start all services with Docker Compose |
+| `make down` | Stop all services |
+| `make restart` | Restart all services |
+| `make ps` | Show service status |
+| `make logs` | View logs (follows) |
+| `make clean` | Remove all data, volumes, and downloaded files |
+| `make context` | Set kcctl context for local cluster |
+| `make help` | Show available commands |
+
+## Examples and Use Cases
+
+### Initial Setup Commands
+
+Set kcctl context and verify installation:
+
+```bash
+kcctl config set-context local --cluster http://localhost:8083
+kcctl info
+kcctl get plugins --types=sink
+```
+
+### 1. Basic Kafka to Iceberg Integration
+
+Load example data to Kafka and create Iceberg sink:
+```bash
 echo '{"order_id": "001", "customer_id": "cust_123", "product": "laptop", "quantity": 1, "price": 999.99}
 {"order_id": "002", "customer_id": "cust_456", "product": "mouse", "quantity": 2, "price": 25.50}
 {"order_id": "003", "customer_id": "cust_789", "product": "keyboard", "quantity": 1, "price": 75.00}
@@ -14,8 +92,8 @@ echo '{"order_id": "001", "customer_id": "cust_123", "product": "laptop", "quant
 {"order_id": "005", "customer_id": "cust_654", "product": "headphones", "quantity": 1, "price": 149.99}' | docker compose exec -T kcat kcat -P -b broker:9092 -t orders
 ```
 
-- apply iceberg-sink and see data in trino tables
-```
+**Create Iceberg sink connector for orders topic:**
+```bash
 curl -X POST \
 	-H 'Content-Type: application/json' \
 	-H 'Accept: application/json' http://localhost:8083/connectors \
@@ -46,20 +124,22 @@ curl -X POST \
 }'
 ```
 
-write another row to order topic
-```
+**Add another record to orders topic:**
+```bash
 echo '{"order_id": "006", "customer_id": "cust_987", "product": "webcam", "quantity": 1, "price": 89.99}' | docker compose exec -T kcat kcat -P -b broker:9092 -t orders
 ```
 
-write click dataset
+### 2. Working with Schemas and Data Types
 
-```
+**Send click data (without schema):**
+
+```bash
 echo '{"click_ts": "2023-02-01T14:30:25Z","ad_cost": "1.50","is_conversion": "true","user_id": "001234567890"}' | docker compose exec -T kcat kcat -P -b broker:9092 -t clicks
 ```
 
-- iceberg-sink clicks for see data in trino, and we can see problems with data type for clicl_ts now it is varchar but we need timestamp, we need schema
+**Create Iceberg sink for clicks (demonstrates data type issues without schema):**
 
-```
+```bash
 curl -X POST \
 	-H 'Content-Type: application/json' \
 	-H 'Accept: application/json' http://localhost:8083/connectors \
@@ -88,9 +168,9 @@ curl -X POST \
 }'
 ```
 
--- topic with schema for fix problem with timestamp data type
+**Send data with embedded schema to fix timestamp data type issues:**
 
-```
+```bash
 echo '{
   "schema": {
     "type": "struct",
@@ -112,9 +192,9 @@ echo '{
 
 ```
 
-- iceberg-sink whit schema for correct data types in timstamp field
+**Create Iceberg sink with schema enabled for proper timestamp handling:**
 
-```
+```bash
 curl -X POST \
 	-H 'Content-Type: application/json' \
 	-H 'Accept: application/json' http://localhost:8083/connectors \
@@ -143,9 +223,11 @@ curl -X POST \
 }'
 ```
 
-- create postgres table with some data
+### 3. PostgreSQL CDC with Debezium
 
-```
+**Create PostgreSQL table with sample data:**
+
+```sql
 CREATE TABLE public.clicks (
     click_ts TIMESTAMP WITH TIME ZONE,
     ad_cost DECIMAL(38,2),
@@ -158,9 +240,9 @@ INSERT INTO public.clicks (click_ts, ad_cost, is_conversion, user_id)
 ```
 
 
-- apply debezium for postgres
+**Configure Debezium PostgreSQL source connector with Avro:**
 
-```
+```bash
 curl -X POST \
 	-H 'Content-Type: application/json' \
 	-H 'Accept: application/json' http://localhost:8083/connectors \
@@ -187,9 +269,9 @@ curl -X POST \
 }'
 ```
 
-- iceberg-sink for cdc postgres
+**Create Iceberg sink for PostgreSQL CDC data:**
 
-```
+```bash
 curl -X POST \
 	-H 'Content-Type: application/json' \
 	-H 'Accept: application/json' http://localhost:8083/connectors \
@@ -220,9 +302,10 @@ curl -X POST \
 }'
 ```
 
-- iceberg-sink with correct datatype for timstamp
-this doesnt work for curl post
-```
+### 4. Advanced Transformations
+
+**Iceberg sink with timestamp conversion (this example shows curl limitations with complex transforms):**
+```bash
 curl -X POST \
 	-H 'Content-Type: application/json' \
 	-H 'Accept: application/json' http://localhost:8083/connectors \
@@ -264,8 +347,8 @@ curl -X POST \
 
 
 
--- this example works
-```
+**Working solution using kcctl for complex transformations:**
+```bash
 kcctl apply -f - <<EOF
 {
   "name": "iceberg-sink-postgres-clicks-new",
@@ -299,9 +382,9 @@ kcctl apply -f - <<EOF
 EOF
 ```
 
---evolve schema iceberg sink
+**Schema evolution example:**
 
-```
+```bash
 kcctl apply -f - <<EOF
 {
   "name": "iceberg-sink-postgres-clicks01",
@@ -337,9 +420,11 @@ kcctl apply -f - <<EOF
 EOF
 ```
 
--- multiply table in postgres europe
+### 5. Multi-Schema and Dynamic Routing
 
-```
+**Configure Debezium for Europe schema:**
+
+```bash
 curl -X POST \
 	-H 'Content-Type: application/json' \
 	-H 'Accept: application/json' http://localhost:8083/connectors \
@@ -362,9 +447,9 @@ curl -X POST \
 }'
 ```
 
--- multiply table in postgres asia
+**Configure Debezium for Asia schema:**
 
-```
+```bash
 curl -X POST \
 	-H 'Content-Type: application/json' \
 	-H 'Accept: application/json' http://localhost:8083/connectors \
@@ -388,8 +473,8 @@ curl -X POST \
 ```
 
 
--- send data to iceberg with dynamic-routing
-```
+**Iceberg sink with dynamic routing for Europe tables:**
+```bash
 curl -X POST \
 	-H 'Content-Type: application/json' \
 	-H 'Accept: application/json' http://localhost:8083/connectors \
@@ -425,7 +510,7 @@ curl -X POST \
 ```
 
 
-- unpuck data to iceberg
+**Advanced data unpacking to Iceberg with complex transformations:**
 
 ```bash
 curl -X POST \
@@ -479,4 +564,44 @@ curl -X POST \
     "transforms.renameTarget.value.replacement": "cdc.$1_$2_$3"
   }
 }'
+```
+
+## Key Features Demonstrated
+
+1. **Basic Integration**: Simple Kafka topics to Iceberg tables
+2. **Schema Management**: Handling data types and schema evolution
+3. **CDC Integration**: Real-time change capture from PostgreSQL
+4. **Data Transformations**: Converting timestamps and other data types
+5. **Dynamic Routing**: Multi-schema environments with automatic table routing
+6. **Complex Transformations**: Flattening, field extraction, and pattern-based transformations
+
+## Configuration Highlights
+
+- **Iceberg Catalog**: Hive Metastore with S3-compatible storage (MinIO)
+- **Schema Registry**: Avro schema management for type safety
+- **Debezium Transforms**: Built-in CDC data transformations
+- **Custom Transforms**: Timestamp conversion and field manipulation
+- **Dynamic Tables**: Automatic table creation and schema evolution
+
+## Troubleshooting
+
+- Use `kcctl` instead of curl for complex connector configurations
+- Enable schema evolution for dynamic schema changes
+- Monitor connector status: `kcctl get connectors`
+- Check connector logs: `make logs`
+- Verify data in Trino for validation
+
+## Project Structure
+
+```
+debezium-iceberg/
+├── connectors/                 # Downloaded Kafka Connect plugins
+├── docker-compose.yml         # Infrastructure services
+├── Makefile                   # Project management commands
+├── pg.sql                     # PostgreSQL setup scripts
+├── README.md                  # This documentation
+├── scripts.sh/                # Additional scripts
+└── trino/                     # Trino configuration
+    └── catalog/
+        └── iceberg.properties
 ```
