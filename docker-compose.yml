@@ -64,6 +64,7 @@ services:
         confluent-hub install --no-prompt debezium/debezium-connector-postgresql:3.1.2
         confluent-hub install --no-prompt denisw/kafka-connect-jmespath:1.0.0
         confluent-hub install --no-prompt jcustenborder/kafka-connect-transform-common:latest
+        confluent-hub install --no-prompt confluentinc/connect-transforms:latest
         #
         echo "Manually install jcustenborder/kafka-connect-simulator"
         wget https://github.com/jcustenborder/kafka-connect-simulator/releases/download/0.1.118/kafka-connect-simulator-0.1.118.tar.gz -O /tmp/kc-sim.tar.gz
@@ -119,7 +120,7 @@ services:
       - 5433:5432
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=Welcome123
+      - POSTGRES_PASSWORD=postgres
 
   metastore_db:
     image: postgres:11
@@ -195,4 +196,3 @@ services:
       "
     depends_on:
       - minio
-
