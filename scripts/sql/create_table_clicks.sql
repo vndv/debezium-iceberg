@@ -8,21 +8,14 @@ CREATE TABLE public.clicks (
 INSERT INTO public.clicks (click_ts, ad_cost, is_conversion, user_id)
     VALUES ('2023-02-01 13:30:25+00', 1.50, true, '001234567890');
 
+INSERT INTO public.clicks (click_ts, ad_cost, is_conversion, user_id)
+    VALUES ('2023-02-02 13:30:25+00', 2.50, true, '001234567891');
 
-DO $$
-DECLARE
-  i INT := 1;
-  base_ts TIMESTAMPTZ := '2023-02-01 13:30:25+00';
-BEGIN
-  WHILE i <= 1000 LOOP
-    INSERT INTO public.clicks (click_ts, ad_cost, is_conversion, user_id)
-    VALUES (
-      base_ts + (i || ' minutes')::interval,
-      round(random() * 5 + 0.5, 2),  
-      (random() < 0.5),               
-      lpad(i::text, 12, '0')        
-    );
-    i := i + 1;
-  END LOOP;
-END $$;
+DELETE FROM public.clicks
+WHERE user_id = '001234567891';
 
+-- optimize  iceberg tables
+--
+ALTER TABLE iceberg.default.postgres_clicks_avro EXECUTE optimize(file_size_threshold => '10MB');
+ALTER TABLE iceberg.default.postgres_clicks_avro EXECUTE expire_snapshots(retention_threshold => '0d');
+ALTER TABLE iceberg.default.postgres_clicks_avro EXECUTE remove_orphan_files(retention_threshold => '0d');

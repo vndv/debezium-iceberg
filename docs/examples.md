@@ -27,7 +27,7 @@ curl -X POST \
     "iceberg.catalog.type": "hive",
     "iceberg.catalog.uri": "thrift://hive-metastore:9083",
     "iceberg.catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-    "iceberg.catalog.warehouse": "s3://datalake/",
+    "iceberg.catalog.warehouse": "s3a://datalake/warehouse",
     "iceberg.catalog.client.region": "eu-west-1",
     "iceberg.catalog.s3.access-key-id": "minio",
     "iceberg.catalog.s3.secret-access-key": "minio123",
@@ -73,7 +73,7 @@ curl -X POST \
     "iceberg.catalog.type": "hive",
     "iceberg.catalog.uri": "thrift://hive-metastore:9083",
     "iceberg.catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-    "iceberg.catalog.warehouse": "s3://datalake/",
+    "iceberg.catalog.warehouse": "s3a://datalake/warehouse",
     "iceberg.catalog.client.region": "eu-west-1",
     "iceberg.catalog.s3.access-key-id": "minio",
     "iceberg.catalog.s3.secret-access-key": "minio123",
@@ -128,7 +128,7 @@ curl -X POST \
     "iceberg.catalog.type": "hive",
     "iceberg.catalog.uri": "thrift://hive-metastore:9083",
     "iceberg.catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-    "iceberg.catalog.warehouse": "s3://datalake/",
+    "iceberg.catalog.warehouse": "s3a://datalake/warehouse",
     "iceberg.catalog.client.region": "eu-west-1",
     "iceberg.catalog.s3.access-key-id": "minio",
     "iceberg.catalog.s3.secret-access-key": "minio123",
@@ -203,7 +203,7 @@ curl -X POST \
     "iceberg.catalog.type": "hive",
     "iceberg.catalog.uri": "thrift://hive-metastore:9083",
     "iceberg.catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-    "iceberg.catalog.warehouse": "s3://datalake/",
+    "iceberg.catalog.warehouse": "s3a://datalake/warehouse",
     "iceberg.catalog.client.region": "eu-west-1",
     "iceberg.catalog.s3.access-key-id": "minio",
     "iceberg.catalog.s3.secret-access-key": "minio123",
@@ -265,7 +265,7 @@ curl -X POST \
     "iceberg.catalog.type": "hive",
     "iceberg.catalog.uri": "thrift://hive-metastore:9083",
     "iceberg.catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-    "iceberg.catalog.warehouse": "s3://datalake/",
+    "iceberg.catalog.warehouse": "s3a://datalake/warehouse",
     "iceberg.catalog.client.region": "eu-west-1",
     "iceberg.catalog.s3.access-key-id": "minio",
     "iceberg.catalog.s3.secret-access-key": "minio123",
@@ -342,7 +342,7 @@ curl -X POST \
     "iceberg.catalog.type": "hive",
     "iceberg.catalog.uri": "thrift://hive-metastore:9083",
     "iceberg.catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-    "iceberg.catalog.warehouse": "s3://datalake/",
+    "iceberg.catalog.warehouse": "s3a://datalake/warehouse",
     "iceberg.catalog.client.region": "eu-west-1",
     "iceberg.catalog.s3.access-key-id": "minio",
     "iceberg.catalog.s3.secret-access-key": "minio123",
@@ -406,7 +406,7 @@ curl -X POST \
     "iceberg.catalog.type": "hive",
     "iceberg.catalog.uri": "thrift://hive-metastore:9083",
     "iceberg.catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-    "iceberg.catalog.warehouse": "s3://datalake/",
+    "iceberg.catalog.warehouse": "s3a://datalake/warehouse",
     "iceberg.catalog.client.region": "eu-west-1",
     "iceberg.catalog.s3.access-key-id": "minio",
     "iceberg.catalog.s3.secret-access-key": "minio123",
@@ -482,7 +482,7 @@ curl -X POST \
     "iceberg.catalog.type": "hive",
     "iceberg.catalog.uri": "thrift://hive-metastore:9083",
     "iceberg.catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-    "iceberg.catalog.warehouse": "s3://datalake/",
+    "iceberg.catalog.warehouse": "s3a://datalake/warehouse",
     "iceberg.catalog.client.region": "eu-west-1",
     "iceberg.catalog.s3.access-key-id": "minio",
     "iceberg.catalog.s3.secret-access-key": "minio123",
@@ -523,8 +523,9 @@ curl -X POST \
 
     "transforms": "unwrap",
     "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.add.fields": "op,table,source.ts_ms",
     "transforms.unwrap.drop.tombstones": "true",
-    "transforms.unwrap.delete.handling.mode": "drop",
+    "drop.tombstones": "true",
 
     "key.converter": "io.confluent.connect.avro.AvroConverter",
     "key.converter.schema.registry.url": "http://schema-registry:8081",
@@ -545,20 +546,23 @@ curl -X POST \
   "config": {
     "connector.class": "io.tabular.iceberg.connect.IcebergSinkConnector",
     "topics.regex": "dbz-avro.us_east.*",
-    
+
     "iceberg.tables": "default.us_east_orders",
     "iceberg.tables.auto-create-enabled": "true",
     "iceberg.tables.evolve-schema-enabled": "true",
     "iceberg.catalog.type": "hive",
     "iceberg.catalog.uri": "thrift://hive-metastore:9083",
     "iceberg.catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-    "iceberg.catalog.warehouse": "s3://datalake/",
+    "iceberg.catalog.warehouse": "s3a://datalake/warehouse",
     "iceberg.catalog.client.region": "eu-west-1",
     "iceberg.catalog.s3.access-key-id": "minio",
     "iceberg.catalog.s3.secret-access-key": "minio123",
     "iceberg.catalog.s3.endpoint": "http://minio:9000",
     "iceberg.catalog.s3.path-style-access": "true",
     "iceberg.control.commit.interval-ms": "1000",
+
+    "iceberg.delete.mode": "copy-on-write",
+
 
     "key.converter": "io.confluent.connect.avro.AvroConverter",
     "key.converter.schema.registry.url": "http://schema-registry:8081",
@@ -568,7 +572,3 @@ curl -X POST \
   }
 }'
 ```
-
-
-
-

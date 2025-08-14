@@ -13,5 +13,4 @@ END$$;
 
 
 SELECT slot_name, plugin, slot_type, active, restart_lsn
-FROM pg_replication_slots
-WHERE slot_name = 'bookings_pub';
+FROM pg_replication_slots;
