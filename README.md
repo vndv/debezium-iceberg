@@ -39,15 +39,6 @@ make setup
 # Start all services
 make up
 
-# Set kcctl context
-make context
-
-# View service status
-make ps
-
-# View logs
-make logs
-
 # Stop all services
 make down
 
@@ -62,7 +53,7 @@ See in folder docs/examples.md
 
 ### Initial Setup Commands
 
-Set kcctl context and verify installation:
+Set kcctl context and verify installation (optional):
 
 ```bash
 kcctl config set-context local --cluster http://localhost:8083
